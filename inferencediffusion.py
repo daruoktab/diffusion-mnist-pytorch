@@ -8,7 +8,7 @@ app = marimo.App(width="medium")
 def _():
     import deepinv
     import torch
-    from torchvision import datasets, transforms
+    from torchvision import transforms
     import numpy as np
     import matplotlib.pyplot as plt
     import marimo as mo

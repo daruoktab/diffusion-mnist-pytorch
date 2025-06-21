@@ -40,10 +40,8 @@ def _():
     import deepinv
     import torch
     from torchvision import datasets, transforms
-    from sklearn.metrics import confusion_matrix
     import numpy as np
     import matplotlib.pyplot as plt
-    import seaborn as sns
     import os
     return datasets, deepinv, np, os, plt, torch, transforms
 
@@ -118,15 +116,14 @@ def _(mo):
 @app.cell
 def _(deepinv, device, torch):
     lr = 1e-4
-    epochs = 10
 
     model = deepinv.models.DiffUNet(
         in_channels=1, 
         out_channels=1, 
         pretrained=None).to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    mse = torch.nn.MSELoss()
+    torch.optim.Adam(model.parameters(), lr=lr)
+    torch.nn.MSELoss()
 
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -159,8 +156,8 @@ def _(beta_end, beta_start, device, timesteps, torch):
     betas = torch.linspace(beta_start, beta_end, timesteps, device=device)
     alphas = 1.0 - betas
     alphas_cumprod = torch.cumprod(alphas, dim=0)
-    sqrt_alphas_cumprod = torch.sqrt(alphas_cumprod)
-    sqrt_one_minus_alphas_cumprod = torch.sqrt(1.0 - alphas_cumprod)
+    torch.sqrt(alphas_cumprod)
+    torch.sqrt(1.0 - alphas_cumprod)
 
     print("Diffusion schedule computed successfully!")
     return alphas, alphas_cumprod, betas
@@ -229,10 +226,8 @@ def _(device, model, os, torch):
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
         print(f"✅ Loaded trained model from {model_path}")
-        model_loaded = True
     else:
         print(f"❌ Model file {model_path} not found. Please ensure the model is trained and saved.")
-        model_loaded = False
 
     # Uncomment to save the model after training:
     # torch.save(model.state_dict(), model_path)
@@ -276,8 +271,7 @@ def _(alphas, alphas_cumprod, betas, np, plt, timesteps):
     axes_schedule[2].grid(True, alpha=0.3)
 
     plt.tight_layout()
-    fig_schedule
-    return
+    return fig_schedule
 
 
 @app.cell
@@ -303,8 +297,7 @@ def _(plt, train_loader):
 
     plt.tight_layout()
     plt.suptitle('Sample Training Images', y=1.02, fontsize=14)
-    fig_train_samples
-    return
+    return fig_train_samples
 
 
 @app.cell
