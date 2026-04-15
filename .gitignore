@@ -58,3 +58,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Cursor / local agent skills (not part of the app)
+.agents/
+skills-lock.json
