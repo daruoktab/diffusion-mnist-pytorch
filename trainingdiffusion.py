@@ -17,15 +17,13 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-# DDPM on MNIST (DeepInv DiffUNet)
+    mo.md(r"""
+    # DDPM on MNIST (DeepInv DiffUNet)
 
-Train a denoising diffusion model on MNIST: linear β schedule, noise prediction with MSE, and checkpoint export for sampling in `inferencediffusion.py`.
+    Train a denoising diffusion model on MNIST: linear β schedule, noise prediction with MSE, and checkpoint export for sampling in `inferencediffusion.py`.
 
-**Stack:** PyTorch, Torchvision, [DeepInv](https://deepinv.github.io/) `DiffUNet`, [marimo](https://marimo.io/).
-"""
-    )
+    **Stack:** PyTorch, Torchvision, [DeepInv](https://deepinv.github.io/) `DiffUNet`, [marimo](https://marimo.io/).
+    """)
     return
 
 
@@ -48,7 +46,9 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md("## Configuration")
+    mo.md("""
+    ## Configuration
+    """)
     return
 
 
@@ -99,7 +99,9 @@ def _(torch, transforms):
 
 @app.cell
 def _(mo):
-    mo.md("## Data")
+    mo.md("""
+    ## Data
+    """)
     return
 
 
@@ -121,7 +123,9 @@ def _(batch_size, datasets, device, torch, transform):
 
 @app.cell
 def _(mo):
-    mo.md("## Model and optimizer")
+    mo.md("""
+    ## Model and optimizer
+    """)
     return
 
 
@@ -142,7 +146,9 @@ def _(deepinv, device, learning_rate, torch):
 
 @app.cell
 def _(mo):
-    mo.md("## Diffusion schedule")
+    mo.md("""
+    ## Diffusion schedule
+    """)
     return
 
 
@@ -172,7 +178,9 @@ def _(beta_end, beta_start, device, timesteps, torch):
 
 @app.cell
 def _(mo):
-    mo.md("### Noise schedule (linear β)")
+    mo.md("""
+    ### Noise schedule (linear β)
+    """)
     return
 
 
@@ -197,12 +205,15 @@ def _(alphas, alphas_cumprod, betas, np, plt, timesteps):
     axes_schedule[2].grid(True, alpha=0.3)
 
     plt.tight_layout()
+    fig_schedule  # pyright: ignore[reportUnusedExpression] — marimo cell output
     return (fig_schedule,)
 
 
 @app.cell
 def _(mo):
-    mo.md("### Sample minibatch after preprocessing")
+    mo.md("""
+    ### Sample minibatch after preprocessing
+    """)
     return
 
 
@@ -221,12 +232,15 @@ def _(plt, train_loader):
         axes_flat[i].axis("off")
     plt.suptitle("MNIST (resized & normalized)", y=1.02, fontsize=12)
     plt.tight_layout()
+    fig_samples  # pyright: ignore[reportUnusedExpression] — marimo cell output
     return (fig_samples,)
 
 
 @app.cell
 def _(mo):
-    mo.md("## Training")
+    mo.md("""
+    ## Training
+    """)
     return
 
 
@@ -293,7 +307,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md("### Loss curve")
+    mo.md("""
+    ### Loss curve
+    """)
     return
 
 
@@ -328,7 +344,9 @@ def _(loss_history, mo):
 
 @app.cell
 def _(mo):
-    mo.md("## Save checkpoint")
+    mo.md("""
+    ## Save checkpoint
+    """)
     return
 
 
@@ -344,14 +362,12 @@ def _(loss_history, model, model_path, torch):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-## Reference
+    mo.md(r"""
+    ## Reference
 
-- Ho et al., *Denoising Diffusion Probabilistic Models*, [arXiv:2006.11239](https://arxiv.org/abs/2006.11239)
-- After training, open `inferencediffusion.py` to sample from the saved weights.
-"""
-    )
+    - Ho et al., *Denoising Diffusion Probabilistic Models*, [arXiv:2006.11239](https://arxiv.org/abs/2006.11239)
+    - After training, open `inferencediffusion.py` to sample from the saved weights.
+    """)
     return
 
 

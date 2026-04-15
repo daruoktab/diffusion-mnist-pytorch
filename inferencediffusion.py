@@ -243,14 +243,12 @@ def _(np, plt):
 
 @app.cell
 def _(mo):
-    mo.md("## Output")
+    mo.md("## Sampling")
     return
 
 
 @app.cell
 def _(
-    create_process_plot,
-    create_sample_plot,
     generate_run,
     generate_samples,
     is_script_mode,
@@ -261,7 +259,7 @@ def _(
     show_process_checkbox,
 ):
     generated_images = None
-    intermediate_steps: list = []
+    intermediate_steps = []
     should_run = is_script_mode or (
         generate_run.value is not None and generate_run.value > 0
     )
@@ -280,14 +278,10 @@ def _(
                 skip_steps=sampling_steps_slider.value,
             )
         if generated_images is not None:
-            samples_fig = create_sample_plot(generated_images, "Generated MNIST digits")
-            parts = [mo.as_html(samples_fig)]
-            if show_process_checkbox.value and intermediate_steps:
-                process_fig = create_process_plot(intermediate_steps, sample_idx=0)
-                if process_fig is not None:
-                    parts.append(mo.md("### Denoising trajectory (first sample)"))
-                    parts.append(mo.as_html(process_fig))
-            gen_panel = mo.vstack(parts)
+            gen_panel = mo.md(
+                f"**Sampling finished** ({generated_images.shape[0]} images). "
+                "See the figure(s) in the next cell."
+            )
         else:
             gen_panel = mo.md("**Sampling failed** — model returned no tensor.")
     else:
@@ -296,7 +290,45 @@ def _(
         )
 
     gen_panel  # pyright: ignore[reportUnusedExpression] — marimo cell output
-    return generated_images
+    return generated_images, intermediate_steps
+
+
+@app.cell
+def _(mo):
+    mo.md("## Plots")
+    return
+
+
+@app.cell
+def _(
+    create_process_plot,
+    create_sample_plot,
+    generated_images,
+    intermediate_steps,
+    mo,
+    show_process_checkbox,
+):
+    # One matplotlib Figure: show it directly (same idea as trainingdiffusion.py).
+    # Two figures: embed with mo.as_html inside mo.vstack (vstack expects HTML/UI mix).
+    plot_panel = mo.md("*Generate samples above; plots appear here after a successful run.*")
+    if generated_images is not None:
+        samples_fig = create_sample_plot(generated_images, "Generated MNIST digits")
+        if show_process_checkbox.value and intermediate_steps:
+            process_fig = create_process_plot(intermediate_steps, sample_idx=0)
+            if process_fig is not None:
+                plot_panel = mo.vstack(
+                    [
+                        mo.as_html(samples_fig),
+                        mo.md("### Denoising trajectory (first sample)"),
+                        mo.as_html(process_fig),
+                    ]
+                )
+            else:
+                plot_panel = samples_fig
+        else:
+            plot_panel = samples_fig
+    plot_panel  # pyright: ignore[reportUnusedExpression] — marimo cell output
+    return
 
 
 @app.cell
