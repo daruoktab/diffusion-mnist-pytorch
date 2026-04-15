@@ -206,7 +206,7 @@ def _(alphas, alphas_cumprod, betas, np, plt, timesteps):
 
     plt.tight_layout()
     fig_schedule  # pyright: ignore[reportUnusedExpression] — marimo cell output
-    return (fig_schedule,)
+    return
 
 
 @app.cell
@@ -233,7 +233,7 @@ def _(plt, train_loader):
     plt.suptitle("MNIST (resized & normalized)", y=1.02, fontsize=12)
     plt.tight_layout()
     fig_samples  # pyright: ignore[reportUnusedExpression] — marimo cell output
-    return (fig_samples,)
+    return
 
 
 @app.cell
@@ -302,7 +302,7 @@ def _(
             "*Click **Run training** (or run this file with `marimo run` / script mode).*"
         )
     training_status_ui
-    return loss_history
+    return (loss_history,)
 
 
 @app.cell
@@ -314,7 +314,7 @@ def _(mo):
 
 
 @app.cell
-def _(loss_history, mo, np, plt):
+def _(loss_history: list[float], mo, np, plt):
     loss_plot_out = mo.md("*Run training above to plot MSE vs epoch.*")
     if loss_history:
         fig_loss, ax_loss = plt.subplots(figsize=(8, 3.5))

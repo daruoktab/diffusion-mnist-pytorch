@@ -16,15 +16,13 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-# MNIST diffusion — sampling
+    mo.md(r"""
+    # MNIST diffusion — sampling
 
-Load `trained_diffusion_model.pth` from `trainingdiffusion.py`, run DDPM-style reverse diffusion, and inspect or save outputs.
+    Load `trained_diffusion_model.pth` from `trainingdiffusion.py`, run DDPM-style reverse diffusion, and inspect or save outputs.
 
-**Requires:** same image size (32×32) and schedule as training.
-"""
-    )
+    **Requires:** same image size (32×32) and schedule as training.
+    """)
     return
 
 
@@ -47,7 +45,9 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md("## Device")
+    mo.md("""
+    ## Device
+    """)
     return
 
 
@@ -63,7 +63,9 @@ def _(torch):
 
 @app.cell
 def _(mo):
-    mo.md("## Load checkpoint")
+    mo.md("""
+    ## Load checkpoint
+    """)
     return
 
 
@@ -110,12 +112,21 @@ def _(beta_end, beta_start, device, timesteps, torch):
     alphas = 1.0 - betas
     alphas_cumprod = torch.cumprod(alphas, dim=0)
     sqrt_one_minus_alphas_cumprod = torch.sqrt(1.0 - alphas_cumprod)
-    return alphas, betas, sqrt_one_minus_alphas_cumprod
+    # DDPM posterior variance σ̃²_t = β_t (1 - ᾱ_{t-1}) / (1 - ᾱ_t), with ᾱ_{-1} := 1
+    alphas_cumprod_prev = torch.cat(
+        [torch.ones(1, device=device, dtype=alphas_cumprod.dtype), alphas_cumprod[:-1]]
+    )
+    posterior_variance = betas * (1.0 - alphas_cumprod_prev) / (1.0 - alphas_cumprod).clamp(
+        min=1e-20
+    )
+    return alphas, betas, posterior_variance, sqrt_one_minus_alphas_cumprod
 
 
 @app.cell
 def _(mo):
-    mo.md("## Generation controls")
+    mo.md("""
+    ## Generation controls
+    """)
     return
 
 
@@ -128,28 +139,23 @@ def _(mo):
         value=False,
         label="Record intermediate steps (slower)",
     )
-    sampling_steps_slider = mo.ui.slider(
-        start=10,
-        stop=1000,
-        value=50,
-        step=10,
-        label="Sampling step stride (smaller → more steps, slower)",
-        full_width=True,
-    )
     generate_run = mo.ui.run_button(label="Generate samples")
     controls_ui = mo.vstack(
         [
             mo.md(
-                "Adjust sliders, then run generation. "
-                "In script mode (`marimo run`), sampling runs automatically once."
+                "Sampling uses **full 1000-step DDPM** reverse diffusion (same schedule as training). "
+                "Expect slower runs than a broken skip-stride shortcut; quality needs every step."
             ),
-            mo.hstack([num_samples_slider, sampling_steps_slider], justify="start", gap=1),
+            mo.md(
+                "In script mode (`marimo run`), generation runs automatically once after you open the app."
+            ),
+            num_samples_slider,
             show_process_checkbox,
             generate_run,
         ]
     )
     controls_ui  # pyright: ignore[reportUnusedExpression] — marimo cell output
-    return generate_run, num_samples_slider, sampling_steps_slider, show_process_checkbox
+    return generate_run, num_samples_slider, show_process_checkbox
 
 
 @app.cell
@@ -159,11 +165,12 @@ def _(
     device,
     image_size,
     model,
+    posterior_variance,
     sqrt_one_minus_alphas_cumprod,
     timesteps,
     torch,
 ):
-    def generate_samples(num_samples=9, save_intermediate=False, skip_steps=50):
+    def generate_samples(num_samples=9, save_intermediate=False):
         if model is None:
             return None, []
 
@@ -171,23 +178,24 @@ def _(
         with torch.no_grad():
             x = torch.randn(num_samples, 1, image_size, image_size, device=device)
             intermediate_steps = []
-            steps_to_run = list(range(0, timesteps, skip_steps))[::-1]
-
-            for i, t in enumerate(steps_to_run):
+            # Full DDPM reverse: one timestep at a time (Ho et al., Alg. 2).
+            for step_i, t in enumerate(reversed(range(timesteps))):
                 t_batch = torch.full((num_samples,), t, device=device, dtype=torch.long)
                 predicted_noise = model(x, t_batch, type_t="timestep")
                 alpha_t = alphas[t]
                 beta_t = betas[t]
-                mean = (1 / torch.sqrt(alpha_t)) * (
+                mean = (1.0 / torch.sqrt(alpha_t)) * (
                     x - (beta_t / sqrt_one_minus_alphas_cumprod[t]) * predicted_noise
                 )
                 if t > 0:
-                    posterior_variance = beta_t * skip_steps
+                    var = posterior_variance[t]
                     noise = torch.randn_like(x)
-                    x = mean + torch.sqrt(posterior_variance) * noise
+                    x = mean + torch.sqrt(var) * noise
                 else:
                     x = mean
-                if save_intermediate and i % max(1, len(steps_to_run) // 8) == 0:
+                if save_intermediate and (
+                    step_i % max(1, timesteps // 8) == 0 or t == 0
+                ):
                     intermediate_steps.append(x.clone())
         return x, intermediate_steps
 
@@ -243,7 +251,9 @@ def _(np, plt):
 
 @app.cell
 def _(mo):
-    mo.md("## Sampling")
+    mo.md("""
+    ## Sampling
+    """)
     return
 
 
@@ -255,7 +265,6 @@ def _(
     mo,
     model,
     num_samples_slider,
-    sampling_steps_slider,
     show_process_checkbox,
 ):
     generated_images = None
@@ -275,7 +284,6 @@ def _(
             generated_images, intermediate_steps = generate_samples(
                 num_samples=num_samples_slider.value,
                 save_intermediate=show_process_checkbox.value,
-                skip_steps=sampling_steps_slider.value,
             )
         if generated_images is not None:
             gen_panel = mo.md(
@@ -295,7 +303,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md("## Plots")
+    mo.md("""
+    ## Plots
+    """)
     return
 
 
@@ -333,7 +343,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md("## Save outputs")
+    mo.md("""
+    ## Save outputs
+    """)
     return
 
 
@@ -347,7 +359,15 @@ def _(mo):
 
 
 @app.cell
-def _(generated_images, mo, np, save_image, save_image_button, save_tensor_button, torch):
+def _(
+    generated_images,
+    mo,
+    np,
+    save_image,
+    save_image_button,
+    save_tensor_button,
+    torch,
+):
     notes: list[str] = []
 
     if save_tensor_button.value is not None and save_tensor_button.value > 0:
@@ -384,19 +404,17 @@ def _(generated_images, mo, np, save_image, save_image_button, save_tensor_butto
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-## Model notes
+    mo.md(r"""
+    ## Model notes
 
-| | |
-|--|--|
-| Architecture | `DiffUNet` (DeepInv) |
-| Spatial size | 32×32 grayscale |
-| Channels | 1 |
-| Training timesteps | 1000 (linear β schedule) |
-| Data | MNIST-style digits |
-"""
-    )
+    | | |
+    |--|--|
+    | Architecture | `DiffUNet` (DeepInv) |
+    | Spatial size | 32×32 grayscale |
+    | Channels | 1 |
+    | Training timesteps | 1000 (linear β schedule) |
+    | Data | MNIST-style digits |
+    """)
     return
 
 
