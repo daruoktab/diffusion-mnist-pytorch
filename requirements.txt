@@ -1,0 +1,8 @@
+# Tanpa pin = versi terbaru yang kompatibel saat `uv pip install -r requirements.txt`
+# (dengan conda env Python 3.12 yang sudah di-activate)
+torch
+torchvision
+deepinv
+marimo
+matplotlib
+numpy

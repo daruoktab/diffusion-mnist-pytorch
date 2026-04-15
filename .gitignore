@@ -1,0 +1,60 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# PyTorch / training artifacts (large; regenerate locally)
+*.pth
+*.pt
+
+# Generated inference outputs
+generated_samples.pt
+generated_grid.png
+
+# MNIST and other downloaded data
+data/
+
+# marimo
+.marimo/
+__marimo__/
+
+# Tools
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Editors & OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter (if any)
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Environment secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log

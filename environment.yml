@@ -1,0 +1,14 @@
+# Hanya interpreter Python 3.12; paket proyek di-install dengan uv ke env aktif:
+#   conda env create -f environment.yml
+#   conda activate dmnist
+#   uv pip install -r requirements.txt
+#
+# Upgrade nanti: uv pip install -U -r requirements.txt
+#
+# GPU (CUDA): pasang PyTorch dari indeks resmi, contoh:
+#   uv pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cu124
+name: dmnist
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
